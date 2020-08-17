@@ -81,13 +81,15 @@ namespace BankApp
         }
         private void btnCalculate_Click(object sender, EventArgs e)
         {
+            int signCount = Convert.ToInt32(string.IsNullOrEmpty(txtSignCount.Text) ? "0" : txtSignCount.Text);
+
             var mainCustomers
                 = Customers.Where(ex => ex.Value == 1).Select(ex => ex.Key).ToList(); // حق برداشت به تنهایی
             var withdrawBySignersSign
                 = Customers.Where(ex => ex.Value == 3).Select(ex => ex.Key).ToList(); // حق برداشت در صورت کفایت امضا
             var signerCustomers
                 = Customers.Where(ex => ex.Value == 2).Select(ex => ex.Key).ToList(); // حق امضا
-
+            
 
             if (mainCustomers.Count <= 0 && withdrawBySignersSign.Count <= 0)
             {
@@ -103,18 +105,26 @@ namespace BankApp
                 strWithdrawMethods = $"حالت {methodsNum} : مشتریان {string.Join(",", mainCustomers)} امضا کرده باشند" + Environment.NewLine;
                 methodsNum += 1;
             }
-            if (signerCustomers.Count > 0 && withdrawBySignersSign.Count > 0)
+            if (signCount != 0)
             {
-                strWithdrawMethods += $"حالت {methodsNum} : { (withdrawBySignersSign.Count == 1 ? 2 : withdrawBySignersSign.Count) - 1} نفر از مشتریان  {string.Join(",", withdrawBySignersSign)} به همراه {(signerCustomers.Count == 1 ? 2 : signerCustomers.Count) - 1} نفر از مشتریان {string.Join(",", signerCustomers)}امضا کرده باشند" + Environment.NewLine;
-                methodsNum += 1;
-            }
-            if (withdrawBySignersSign.Count > 0)
-            {
-                strWithdrawMethods += $"حالت {methodsNum} : بیش از {(withdrawBySignersSign.Count == 1 ? 2 : withdrawBySignersSign.Count) - 1} نفر از مشتریان {string.Join(",", withdrawBySignersSign)} امضا کرده باشند";
-                methodsNum += 1;
+                if ((signerCustomers.Count > 0 && signerCustomers.Count >= signCount) && withdrawBySignersSign.Count > 0)
+                {
+                    strWithdrawMethods += $"حالت {methodsNum} : { signCount } نفر از مشتریان  {string.Join(",", withdrawBySignersSign)} به همراه {(signerCustomers.Count == 1 ? 2 : signerCustomers.Count) - 1} نفر از مشتریان {string.Join(",", signerCustomers)}امضا کرده باشند" + Environment.NewLine;
+                    methodsNum += 1;
+                }
+                if (signerCustomers.Count > 0 && signerCustomers.Count >= signCount)
+                {
+                    strWithdrawMethods += $"حالت {methodsNum} : بیش از {signCount} نفر از مشتریان {string.Join(",", withdrawBySignersSign)} امضا کرده باشند";
+                    methodsNum += 1;
+                }
             }
 
             MessageBox.Show(strWithdrawMethods, "حالت های برداشت", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
+        }
+
+        private void txtSignCount_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar));
         }
     }
 }
